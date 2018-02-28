@@ -8,7 +8,7 @@ library(boot)                                  # the package for bootstrap by An
 library(plyr)                                  # splitting, applying and combining data by Hadley Wickham 
 
 # Set the working directory, I always like to do this so I don't lose files and to simplify subsequent read and writes
-setwd("C:/Users/pm27995/OneDrive - The University of Texas at Austin/Courses/PGE337_new/Assignments/Assignment5")
+setwd("C:/my_directory")
 
 # Let's make up some data. This is a n=5 set of porosity measurements in % 
 porosity <- c(7, 9, 10, 11, 15)                # this command concatenates the list of numerical values into a vector
@@ -38,7 +38,7 @@ calc_average <- function(d,i=c(1:n)){
 # First Parameter: d is the data vector or array
 # Second Parameter: what is i=c(1:n)? i is the index vector expected to be the same size of the data and c(1:n) is a default
 i <- c(1:5)
-i                                              # So the default is just the indexes in order from 1 to n.  
+i                                              # so the default is just the indexes in order from 1 to n.  
 
 #What does our function do with the index vector?  It builds a new data vector:
 j = c(1,1,1,1,1)
