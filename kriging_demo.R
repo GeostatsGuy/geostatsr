@@ -1,11 +1,17 @@
 # Kriging Tutorial in R for Engineers and Geoscientists 
+
 # Michael Pyrcz, University of Texas at Austin, Twitter @GeostatsGuy
 
+
+
 # This will be used in my Introduction to Geostatistics undergraduate class 
+
 # It is assumed that students have no previous R experience.  
+
 # This utilizes the gstat library by Edzer Pedesma, appreciation to Dr. Pedesma for assistance.
 
 # Load the required libraries, you may have to first go to "Tools/Install Packages..." to install these first
+
 library(gstat)                                 # geostatistical methods by Edzer Pebesma
 library(sp)                                    # spatial points addition to regular data frames
 library(plyr)                                  # splitting, applying and combining data by Hadley Wickham 
@@ -22,7 +28,6 @@ ysize = 10.0
 # Declare functions
 
 # This function completes standard normal transform on a data vector
-
 nscore <- function(x) {                        # written by Ashton Shortridge, May/June, 2008
   # Takes a vector of values x and calculates their normal scores. Returns 
   # a list with the scores and an ordered table of original values and
@@ -33,7 +38,6 @@ nscore <- function(x) {                        # written by Ashton Shortridge, M
 }
 
 # This function builds a spatial points dataframe with the locations for estimation / simulation 
-
 addcoord <- function(nx,xmin,xsize,ny,ymin,ysize) { # Michael Pyrcz, March, 2018                      
   # makes a 2D dataframe with coordinates based on GSLIB specification
   coords = matrix(nrow = nx*ny,ncol=2)
@@ -75,8 +79,8 @@ head(mydata)
 
 # Now let's check the porosity data distribution
 par(mfrow=c(2,2))                              # set up a 2x2 matrix of plots 
-
 hist(mydata$porosity,main="Porosity (%)",xlab="Porosity (%)",nclass = 15) # histogram
+
 # ecdf makes a cdf object and plot command plots it
 plot(ecdf(mydata$porosity),main="Porosity",xlab="Porosity (%",ylab="Cumulative Probability") # CDF
 
@@ -109,7 +113,6 @@ por.vg.125 = variogram(NPorosity~1,mydata,cutoff = 3000,width =500,alpha = 125.0
 plot(por.vg.035$dist,por.vg.035$gamma,main="Porosity Anisotropic Variogram",xlab="  Lag Distance (m) ",ylab=" Semivariogram ", col=color[1],ylim=c(0,1.2))
 points(por.vg.125$dist,por.vg.125$gamma,col=color[2])
 abline(h = 1.0)
-lines(por.vm.iso$model)
 
 unit_vector = c(sin(35*pi/180),cos(35*pi/180),0) # unit vector for 035 azimuth
 vm.ani.035 <- variogramLine(por.vm.ani,maxdist=3000,min=0.0001,n=100,dir=unit_vector,covariance=FALSE) # calculate 035 variogram model
@@ -127,7 +130,6 @@ coords <- addcoord(nx,xmin,xsize,ny,ymin,ysize) # make a dataframe with all the 
 summary(coords)                                # check the coordinates
 
 # First attempt inverse distance on this regular grid
-
 # We will try 3 different powers to demonstrate the influence on the interpolation.  Higher powers result 
 # in more locally specific models, because distance has a greater influence.
 
@@ -152,30 +154,27 @@ summary(porosity.kriged)
 
 # Visualize the estimates
 spplot(porosity.kriged["var1.pred"],main = "Porosity Ordinary Kriging", key.space = "right",cuts = cuts,xlab = "X (m)", ylab = "Y (m)")
+
 # Visualize the estimation variance, given sill = 1.0, the maximum estimation variance is 1.0.
 spplot(porosity.kriged["var1.var"],main = "Porosity Ordinary Kriging Variance", key.space = "right",cuts = cuts.var,xlab = "X (m)", ylab = "Y (m)")
 
 # Set up limited search parameters repeat the kriging
-
 maxdist = 800                                  # maximum distance to look for data
 nmin = 3                                       # minimum number of data for an estimate
 omax = 1                                       # maximum number of data per octant    
 
 porosity.kriged.sp = krige(porosity~1, mydata, coords, model = por.vm.ani,maxdist = maxdist,nmin = nmin,omax=omax) # ordianry kriging
 spplot(porosity.kriged.sp["var1.pred"],main = "Porosity Ordinary Kriging / Limited Search", key.space = "right",cuts = cuts,xlab = "X (m)", ylab = "Y (m)")
-  
+
 # Observed the search artifacts (lines and bands) due to too restrictive search 
 
 # Let's remove the nugget effect and krige again once again with unlimited search
-
 # Anisotropic variogram with nugget effect removed
 por.vm.ani.nonugget <- vgm(psill = 1.0, "Exp", 800, anis = c(035, 0.5),nugget=0.0)
 por.vm.ani.nonugget  
 
 porosity.kriged.nonugget = krige(porosity~1, mydata, coords, model = por.vm.ani.nonugget,maxdist = Inf,nmin = 0,omax=Inf) # ordianry kriging
-
 spplot(porosity.kriged.nonugget["var1.pred"],main = "Porosity Ordinary Kriging No Nugget", key.space = "right",cuts = cuts,xlab = "X (m)", ylab = "Y (m)")
-
 spplot(porosity.kriged.nonugget["var1.var"],main = "Porosity Ordinary Kriging Variance No Nugget", key.space = "right",cuts = cuts.var,xlab = "X (m)", ylab = "Y (m)")
 
 # On your own try changing the variogram parameters and observe the results.  Also consider kriging with a trend.
@@ -184,4 +183,4 @@ spplot(porosity.kriged.nonugget["var1.var"],main = "Porosity Ordinary Kriging Va
 
 # Michael
 
-# Appreciation to Edzer Pedesma for the gstat package.
+
