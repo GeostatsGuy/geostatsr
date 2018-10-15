@@ -1,0 +1,192 @@
+# Linear Regression in R for Engineers and Geoscientists 
+### Michael Pyrcz, Associate Professor, University of Texas at Austin
+
+#### Contacts: [Twitter/@GeostatsGuy](https://twitter.com/geostatsguy) | [GitHub/GeostatsGuy](https://github.com/GeostatsGuy) | [www.michaelpyrcz.com](http://michaelpyrcz.com) | [GoogleScholar](https://scholar.google.com/citations?user=QVZ20eQAAAAJ&hl=en&oi=ao) | [Book](https://www.amazon.com/Geostatistical-Reservoir-Modeling-Michael-Pyrcz/dp/0199731446)
+
+A very simple demonstration of linear regression using the R stats Package developed by the R Team and contributors worldwide, the docs are at [linear regression in R docs](https://www.rdocumentation.org/packages/stats/versions/3.5.1/topics/lm).  For this example we use a well porosity and density dataset (file: Density_Por_data.csv) that may be found at [Data Repository](https://github.com/GeostatsGuy/GeoDataSets). The original R file is available here [R file](https://github.com/GeostatsGuy/geostatsr/blob/master/linear_regression_demo_v2.R).
+
+I used this in my Introduction to Geostatistics Undergraduate Class (PGE337 at UT Austin) as a first introduction to R for the engineering undergraduate students. It is assumed that students have no previous R experience; therefore, all steps of the code are explored and described.
+
+#### Load the required libraries
+
+The linear regression method is built into the main R library (I may not have said that right, surfice it to say you won't have to install nor include it).  We include the $plyr$ package as it is convenient for manipulating data.  
+```{r}
+library(plyr)                                  # data operations by Hadley Wickham 
+```
+If you get an error, you may have to first go to "Tools/Install Packages..." to install these packages. Just type in the names one at a time into the package field and install.  The package names should autocomplete (helping you make sure you got the right package name), and the install process is automatic, with the possibility of installing other required dependency packages.
+
+#### Set the working directory
+
+I always like to do this so I don't lose files and to simplify subsequent read and writes (avoid including the full address).
+```{r}
+setwd("C:/PGE337")
+```
+
+You will have to change this on Mac.  If stuck consider using the GUI to set the working directory.  Go to Files/More/Set As Working Directory in the files pane to the right.
+
+#### Read the data table
+
+Copy the NonlinearPor_Perm_data.csv comma delimited 2 well datafile from https://github.com/GeostatsGuy/GeoDataSets to your working directory.
+```{r}
+mydata = read.csv("Density_Por_data.csv")      # read csv file
+```
+Let's visualize the first several rows of our data so we can make sure we successfully loaded it
+```{r}
+head(mydata)                                   # preview first several rows in the console
+```
+The columns are variables with variable names at the top and the rows are samples
+
+#### Data checking
+
+We'll extract the variables of interest from the data table into a new vectors for convenience.  Afterwards, you are welcome to try linear regression with Well A also.  Spoiler alert: the model fit will not be as good.
+
+```{r}
+den <- mydata$Density                          # make a new vector from the PorosityB variable 
+por <- mydata$Porosity                         # make a new vector from the PemreabilityB variable 
+```
+
+We will make some data visualizations to check our data.  First we declare a 2x3 plot matrix.
+```{r}
+par(mfrow=c(3,2))                              # set up a 3x2 matrix of plots 
+```
+
+Since we are modeling a relationship between Porosity and Density, let's start with scatter plots of Porosity vs. Density.  This will help us determine if our linear model be appropriate to model this relationship?
+
+```{r}
+plot(por,den,main="Well Porosity (%) vs. Density (g/cm3)",xlab=" Density (g/cm3) ",ylab=" Porosity (%) ")
+```
+
+From these scatter plots it is clear that we should build a linear model of Porosity predicted from Density, since Porosity has a linear relationship with Density.  Now let's check the Porosity and Density distributions.
+
+First, let's check the Density frequence histogram and cumulative distribution function.
+
+```{r}
+hist(den,main="Well Density",xlab="Density (g/cm3)",nclass = 15) # Hist builds a regular frequency histogram
+# ecdf makes a cdf object and plot command plots it
+plot(ecdf(den),main="Well Density (%)",xlab="Density (g/cm3)",ylab="Cumulative Probability")
+```
+
+We can also look at the summary statistics. 
+
+```{r}
+summary(den)
+```
+
+Now, let's look at the porosity frequence histogram and cumulative density function of natural log of permeability.
+
+```{r}
+hist(por,main="Well Porosity ",xlab="Porosity (%)",nclass = 15) # hist builds a regular frequency histogram
+# ecdf makes a cdf object and plot command plots it
+plot(ecdf(por),main="Well Porosity",xlab="Porosity (%)",ylab="Cumulative Probability")
+```
+
+Once again We can also look at the summary statistics.  
+
+```{r}
+summary(por)
+```
+
+It is always a good idea to check the minimum and maximum for realistic value ranges, for outliers and the shape of the distribution for missing values and / or mixing of populations. The data looks good we can proceed with modeling.
+
+#### Build the Linear Regression Model Object
+
+Now we are ready to calculate a linear regression model to predict porosity from density.  Our model will have the form:
+
+$$y = b_1 \times x + b_0 + \epsilon $$
+where $b_1$ is the slope and $b_0$ is the $y$ intercept at $x=0$ and $\epsilon$ is the error.  This model assumes: 
+
+1. the feature / predictor, $x$ is error free, 
+2. linearity between the feature / predictor, $x$, and the response, $y$, 
+3. homoscedasticity with constant error over the range of reponse values, $y$,  
+4. idependence of errors, $\epsilon$, and 
+5. no perfect colilinearity between any features (not a concern here with a single feature)
+
+we build our linear regression model object with this command.
+
+```{r}
+por.lm = lm(por ~ den,data=mydata)               # our linear model predicts por from den  
+```
+To see the resulting model coefficients use this command.
+```{r}
+print(por.lm)                                    # model coefficients
+```
+The linear model object ("por.lm") is very convenient. It includes all the information we need for hypothesis testing, and confidence and prediction intervals.  In fact the hypothesis tests are completed automatically. We can make a summary object that includes the hypothesis test results.
+```{r}
+lm.summary = summary(por.lm, correlation = TRUE) # summary of model 
+```
+#### Model Checking
+
+First, let's check the statistical significance of the model coefficients with the t-test.
+```{r}
+print(lm.summary$coefficients)                   # coefficients, t statistic and probability
+```
+For each coefficient you can observe the estimated model parameter, standard error and resulting t-statistic and the two-tailed probability of >|t-statistic| or the maximum alpha level that one would reject the null hypothesis.  
+
+$$ H_0: b_i = 0.0 , \forall \space i = 1,\ldots,m $$
+$$ H_0: b_i \ne 0.0 , \forall \space i = 1,\ldots,m $$
+
+
+As you can see we reject the null hypothesis ($\alpha = 0.05$) that the model coefficients slope (den) and intercept (intercept) are equal to 0.0. The model coefficients are statistically significant (different than $0.0$).
+
+Now lets look at the f-test for the entire model. We access the f-statistic results with $fstatistic.  
+```{r}
+print(lm.summary$fstatistic)                     # f statistic results  
+```
+The f-statistic is calculate from difference in sum of square error between the model and a reduced, constant slope model.  We reject the reduced, constant slope model in favour of the full model given $f_{critical}$ calculated given $\alpha = 0.05$, $DF_1 = p - 1 = 1$ and $DF_2 = n-p = 103$ equal to 3.93.
+
+Let's check the distribution of residuals for bias and outliers.  The residual vector is a member of the linear regression model object.  We access this vector with $residual.     
+
+```{r}
+hist(lm.summary$residuals,main="LM Porosity Residuals",xlab="Residuals (%)",nclass = 15) # histogram 
+summary(lm.summary$residuals)                    # summary statistics for residuals
+```
+The residuals look good, the mean = 0.0 and there are no outliers indicating data values with poor prediction accuracy.
+
+One could visualize all this previous output in the console with the summary command. 
+```{r}
+summary(por.lm, correlation = TRUE)              # all summary for linear regression model  
+```
+#### Confidence and Prediction Intervals
+
+Let's get the confidence intervals for the fitted model parameters.  
+```{r}
+confint(por.lm,level = 0.95)                     # confidence intervals 
+```
+We get the lower and upper 95% confidence intervals for both intercept and slope.
+
+Let's demonstrate prediction intervals by calculating them at the data locations.  Note the prediction intervals are centered on the model fit.
+```{r}
+prediction = predict(por.lm,interval="predict") # prediction intervals at data locations   
+head(prediction)
+```
+We now have a data table with the model fit and prediction intervals for all of our porosity data.
+
+#### Built-in Diagnostic Plots
+
+Furthermore the linear regression model has built in diagnostic plots that are very useful for checking our model.  We produce four plots with a single command. Let's first declare a 2x2 plot matrix for best viewing and then run the diagnostic command.
+```{r}
+par(mfrow=c(2,2))                              # plot matrix
+plot(por.lm)                                   # make built-in diagnostic plots
+```
+
+Here's a summary of each plot:
+1. Residual vs Fitted to check linearity and homoscedasticity assumptions.  Check for large residuals / biased expectation.
+2. Normal Q-Q to check the normality in the residuals assumption.  Points should be on the 45 degree line.
+3. Scale-Location to check assumption of homoscedasticity.  There should not be a pattern.
+4. Residual vs. Leverage to identify poorly fit data that have large influence on the model (leverage).
+
+#### Log and Other Transforms
+
+It is common practice to linearize variables with a transformation prior to linear regression.  Care must be taken, as these transforms may invalidate the model assumptions.  Here is blog post with demonstration on  this topic, [Martin Trauth's Blog](http://mres.uni-potsdam.de/index.php/2017/02/11/classical-linear-regression-of-log-transformed-data/).
+
+R and RStudio are an amazing combination for efficient statistical workflow execution.  The linear regression methods shown here are very well documented (see the link at the top). I hope this demonstration has been useful.  I'm always happy to discuss,
+
+Michael
+
+
+Michael Pyrcz, P.Eng., Ph.D.
+Associate Professor, the University of Texas at Austin
+
+#### About Michael J. Pyrcz, P.Eng., Ph.D.
+
+Michael Pyrcz is an associate professor at the University of Texas at Austin. He teaches and consults on the practice of geostatistical reservoir modeling and conducts research on new geostatistical methods to improve reservoir modeling and uncertainty for conventional and unconventional reservoirs. He has published over 40 peer reviewed technical articles, a textbook with Oxford University Press, and is an associated editor with Computers & Geosciences. For more details see www.michaelpyrcz.com or follow him on Twitter @GeostatsGuy.
