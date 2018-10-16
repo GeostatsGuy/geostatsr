@@ -28,7 +28,7 @@ por <- mydata$Porosity                         # make a new vector from the Pemr
 par(mfrow=c(3,2))                              # set up a 2x2 matrix of plots 
 
 # We start with the scatter plot of Perm and Ln(perm) vs. Porosity for Well B. 
-plot(por,den,main="Well Porosity (%) vs. Density (g/cm3)",xlab=" Density (g/cm3) ",ylab=" Porosity (%) ")
+plot(den,por,main="Well Porosity (%) vs. Density (g/cm3)",xlab=" Density (g/cm3) ",ylab=" Porosity (%) ")
 # From this scatter plots it is clear that we should build a linear model of Porosity vs. Density.
 
 # Let's check the variable distributions density first and then porosity
