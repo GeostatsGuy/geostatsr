@@ -53,7 +53,7 @@ par(mfrow=c(3,2))                              # set up a 3x2 matrix of plots
 Since we are modeling a relationship between Porosity and Density, let's start with scatter plots of Porosity vs. Density.  This will help us determine if our linear model be appropriate to model this relationship?
 
 ```{r}
-plot(por,den,main="Well Porosity (%) vs. Density (g/cm3)",xlab=" Density (g/cm3) ",ylab=" Porosity (%) ")
+plot(den,por,main="Well Porosity (%) vs. Density (g/cm3)",xlab=" Density (g/cm3) ",ylab=" Porosity (%) ")
 ```
 
 From these scatter plots it is clear that we should build a linear model of Porosity predicted from Density, since Porosity has a linear relationship with Density.  Now let's check the Porosity and Density distributions.
